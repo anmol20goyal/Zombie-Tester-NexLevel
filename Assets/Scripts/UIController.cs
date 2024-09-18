@@ -1,4 +1,3 @@
-using TMPro;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
@@ -7,6 +6,8 @@ public class UIController : MonoBehaviour
 {
     [SerializeField] private GameObject _canvasGO;
     [SerializeField] private GameObject _playerDeadGO;
+    [SerializeField] private GameObject _enemyDeadGO;
+    [SerializeField] private GameObject _enemyCrawlGO;
     [SerializeField] private Image _fadeScreen;
 
     [SerializeField] private float _fadeSpeed;
@@ -37,6 +38,25 @@ public class UIController : MonoBehaviour
         _playerDeadGO.SetActive(true);
         _fadeScreen.gameObject.SetActive(true);
         _canFade = true;
+    }
+
+    private void StartFade()
+    {
+        _canFade = true;
+    }
+
+    public void EnemyDead()
+    {
+        _enemyDeadGO.SetActive(true);
+        _enemyCrawlGO.SetActive(false);
+    }    
+
+    public void EnemyCrawl()
+    {
+        _enemyDeadGO.SetActive(false);
+        _enemyCrawlGO.SetActive(true);
+        _fadeScreen.gameObject.SetActive(true);
+        Invoke(nameof(StartFade), 2f);
     }
 
     private void Update()

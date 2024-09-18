@@ -10,9 +10,13 @@ public class EnemyAI : MonoBehaviour
     private NavMeshAgent _agent;
     [SerializeField] private Transform _player;
     [SerializeField] private LayerMask _whatIsGround, _whatIsPlayer;
+    [SerializeField] private AudioSource _audioS;
 
-    //Attacking
-    [SerializeField] private GameObject _projectile;
+    #endregion
+
+    #region Scripts
+
+    [SerializeField] private DamageControl _damageControl_S;
     [SerializeField] private ThrowItem _throwItem_S;
 
     #endregion
@@ -23,9 +27,11 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private bool _canMove;
     [SerializeField] private bool _jumpAttack;
     [SerializeField] private Vector3 _newJumpPos;
+    [SerializeField] private float _walkSpeed = 0.5f;
     [SerializeField] private float _runningSpeed = 5.335f;
     [SerializeField] private float _jumpMoveSpeed = 1f;
     private bool _alreadyAttacked;
+    private bool _alreadyThrown;
     
     //States
     [SerializeField] private float _sightRange;
@@ -34,7 +40,6 @@ public class EnemyAI : MonoBehaviour
     [SerializeField] private bool _playerInSightRange;
     [SerializeField] private bool _playerInAttackRange;
     [SerializeField] private bool _playerInJumpAttackRange;
-    [SerializeField] private float _timeBetweenAttacks;
     [SerializeField] private float _health;
 
     //Patroling
@@ -44,9 +49,29 @@ public class EnemyAI : MonoBehaviour
 
     #endregion
 
+    #region SoundClips
+
+    [Header("*****Sounds*****")]
+    [SerializeField] private AudioClip _crawlClip;
+
+    #endregion
+
     private void Awake()
     {
         _agent = GetComponent<NavMeshAgent>();
+    }
+
+    private void Start()
+    {
+        _alreadyAttacked = false;
+        _alreadyThrown = false;
+        _walkPointSet = false;
+    }
+
+    public void StartGame()
+    {
+        _canMove = true;
+        _audioS.enabled = true;
     }
 
     private void Update()
@@ -54,6 +79,11 @@ public class EnemyAI : MonoBehaviour
         if (_jumpAttack)
         {
             MoveEnemyOnJumpAttack();
+        }
+
+        if (_damageControl_S.currentHealth <= 0)
+        {
+            EnemyDied();
         }
 
         if (!_canMove) return;
@@ -65,7 +95,8 @@ public class EnemyAI : MonoBehaviour
 
         if (!_playerInSightRange && !_playerInAttackRange) Patroling();
         if (_playerInSightRange && !_playerInAttackRange) ThrowAtPlayer(); // throw items
-        if (_playerInAttackRange && _playerInSightRange) AttackPlayer(); // run and jump attack
+        if (_playerInAttackRange && _playerInSightRange) AttackPlayer(); // run to player
+        if (_playerInAttackRange && _playerInSightRange && _playerInJumpAttackRange) JumpAttackPlayer(); // run and jump attack
     }
 
     #region Patroling
@@ -77,6 +108,9 @@ public class EnemyAI : MonoBehaviour
         if (_walkPointSet)
         {
             _agent.SetDestination(_walkPoint);
+            _agent.speed = _walkSpeed;
+            _agent.acceleration = 1;
+            _animator.ResetTrigger(AnimationHandler.instance.animIDThrow);
             _animator.SetFloat(AnimationHandler.instance.animIDSpeed, 1);
             _animator.SetFloat(AnimationHandler.instance.animIDMotionSpeed, 1);
         }
@@ -109,10 +143,18 @@ public class EnemyAI : MonoBehaviour
 
     private void ThrowAtPlayer()
     {
-        StopMoving();
-        transform.LookAt(_player);
-        _animator.SetTrigger(AnimationHandler.instance.animIDThrow);
-        _throwItem_S.StartThrow(_animator, _player.position);
+        if (!_alreadyThrown)
+        {
+            _alreadyThrown = true;
+            StopMoving();
+            transform.LookAt(_player);
+            _throwItem_S.StartThrow(_animator, _player.position);
+        }
+    }
+
+    public void ResetThrow()
+    {
+        _alreadyThrown = false;
     }
 
     #endregion
@@ -121,40 +163,39 @@ public class EnemyAI : MonoBehaviour
 
     private void AttackPlayer()
     {
+        _agent.SetDestination(_player.position);
         _agent.speed = _runningSpeed;
+        _agent.acceleration = 5;
+        _animator.ResetTrigger(AnimationHandler.instance.animIDThrow);
         _animator.SetFloat(AnimationHandler.instance.animIDSpeed, 1.5f);
         _animator.SetFloat(AnimationHandler.instance.animIDMotionSpeed, 1);
 
         transform.LookAt(_player);
-
-        if (!_alreadyAttacked && _playerInJumpAttackRange)
-        {
-            // check if the player is within 2m radius....then start the jump attack animation
-            _animator.SetTrigger(AnimationHandler.instance.animIDAttack);
-            _alreadyAttacked = true;
-            Invoke(nameof(ResetAttack), _timeBetweenAttacks);
-        }
     }
 
-    private void ResetAttack()
+    private void JumpAttackPlayer()
     {
-        _alreadyAttacked = false;
+        if (_alreadyAttacked) return;
+
+        StopMoving();
+        _animator.SetTrigger(AnimationHandler.instance.animIDAttack);
+        _alreadyAttacked = true;
     }
 
     public void OnJumpAttack(AnimationEvent animationEvent)
     {
         // move player to the jump location
-        // position of a point on a circle is (a+rCos(angle), b+rSin(angle))
         if (animationEvent.animatorClipInfo.weight > 0.5f)
         {
-            var center = new Vector2(transform.position.x, transform.position.z);
-            var radius = 2f;
-            var angle = transform.rotation.eulerAngles.y - 90;
+            var playerPos = new Vector3(_player.position.x - 0.5f, _player.position.y, _player.position.z);
+            float distance = Vector3.Distance(transform.position, playerPos);
+            distance = Mathf.Clamp(distance, 0f, _jumpAttackRange);
 
-            var rCos = radius * Mathf.Cos(angle);
-            var rSin = radius * Mathf.Sin(angle);
+            Vector3 targetPosition = playerPos - transform.position;
+            targetPosition.Normalize();
 
-            _newJumpPos = new Vector3(center.x + rCos, transform.position.y, center.y + rSin);
+            _newJumpPos = transform.position + (targetPosition * distance);
+
             _jumpAttack = true;
         }
     }
@@ -164,38 +205,27 @@ public class EnemyAI : MonoBehaviour
         if (animationEvent.animatorClipInfo.weight > 0.5f)
         {
             _jumpAttack = false;
+            _alreadyAttacked = false;
         }
     }
 
     private void MoveEnemyOnJumpAttack()
     {
-        transform.position = Vector3.Lerp(transform.position, _newJumpPos, _jumpMoveSpeed * Time.deltaTime);
+        if (_canMove)
+            transform.position = Vector3.Lerp(transform.position, _newJumpPos, _jumpMoveSpeed * Time.deltaTime);
     }
 
     #endregion
 
-   
-
-    public void TakeDamage(int damage)
-    {
-        _health -= damage;
-
-        if (_health <= 0) Invoke(nameof(DestroyEnemy), 0.5f);
-    }
-
-    private void DestroyEnemy()
-    {
-        Destroy(gameObject);
-    }
-
-    private void OnDrawGizmosSelected()
+    /*private void OnDrawGizmosSelected()
     {
         Gizmos.color = Color.red;
         Gizmos.DrawWireSphere(transform.position, _attackRange);
         Gizmos.color = Color.yellow;
         Gizmos.DrawWireSphere(transform.position, _sightRange);
-    }
-
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(transform.position, _jumpAttackRange);
+    }*/
 
     private void StopMoving(bool idle = true)
     {
@@ -206,4 +236,52 @@ public class EnemyAI : MonoBehaviour
         }
         _agent.SetDestination(transform.position);
     }
+
+    #region Collision Methods
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Stone"))
+        {
+            _damageControl_S.StoneHit();
+        }
+
+        if (other.CompareTag("Player"))
+        {
+            _canMove = false;
+            _jumpAttack = false;
+            StopMoving();
+        }
+    }
+
+    #endregion
+
+    #region Death Methods
+
+    private void EnemyDied()
+    {
+        StopMoving(true);
+        _canMove = false;
+        _jumpAttack = false;
+    }
+
+    public void EnemyDead(AnimationEvent animationEvent)
+    {
+        if (animationEvent.animatorClipInfo.weight > 0.5f)
+            UIController.instance.EnemyDead();
+    }
+
+    public void EnemyCrawl(AnimationEvent animationEvent)
+    {
+        if (animationEvent.animatorClipInfo.weight > 0.5f)
+        {
+            UIController.instance.EnemyCrawl();
+            SoundManager.instance.PlayAudio(_crawlClip, true);
+            StopMoving(false);
+            _canMove = false;
+            _jumpAttack = false;
+        }
+    }
+
+    #endregion
 }

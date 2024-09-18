@@ -24,6 +24,7 @@ public class LocomotionController : MonoBehaviour
     private float _targetRotation = 0.0f;
     private float _rotationVelocity;
     private float _verticalVelocity;
+    private bool _canMove;
 
     #endregion
 
@@ -58,12 +59,18 @@ public class LocomotionController : MonoBehaviour
 
     #endregion
 
+    #region Scripts
+
+    [SerializeField] private ThrowItem _throwItem_S;
+    [SerializeField] private DamageControl _damageControl_S;
+
+    #endregion
+
     #region GameObjects
 
     [Header("*****GameObjects*****")]
     [SerializeField] private GameObject _stone;
     [SerializeField] private GameObject _throwInitialPoint;
-    [SerializeField] private ThrowItem _throwItem_S;
     private Animator _animator;
     private CharacterController _charController;
     private InputsController _inputController;
@@ -87,10 +94,19 @@ public class LocomotionController : MonoBehaviour
 
         // reset our timeouts on start
         _fallTimeoutDelta = _fallTimeout;
+        _canMove = false;
+        _inputController.enabled = false;
+    }
+
+    public void StartGame()
+    {
+        _canMove = true;
+        _inputController.enabled = true;
     }
 
     private void Update()
     {
+        if (!_canMove) return;
         JumpAndGravity();
         GroundedCheck();
         Move();
@@ -127,6 +143,7 @@ public class LocomotionController : MonoBehaviour
 
     private void Move()
     {
+        if (!_canMove) return;
         float targetSpeed = _inputController.sprint ? _sprintSpeed : _moveSpeed;
 
         if (_inputController.move == Vector2.zero) targetSpeed = 0.0f;
@@ -218,28 +235,33 @@ public class LocomotionController : MonoBehaviour
         return Mathf.Clamp(lfAngle, lfMin, lfMax);
     }
 
+    #region ThrowItems
+
     private void ThrowStone()
     {
         if (_inputController.throwItem)
         {
             _inputController.throwItem = false;
-            // update animator
-            _throwItem_S.StartThrow(_animator, null);
-            //_animator.SetTrigger(AnimationHandler.instance.animIDThrow);
+            var target = GetMousePos();
+            transform.LookAt(new Vector3(target.x, transform.position.y, target.z));
+            _throwItem_S.StartThrow(_animator, target);
         }
     }
 
-    //public void ThrowItemProjectile(AnimationEvent animationEvent)
-    //{
-    //    if (animationEvent.animatorClipInfo.weight > 0.5f)
-    //    {
-    //        var stonePos = _throwInitialPoint.transform.position;
-    //        Instantiate(_stone, stonePos, Quaternion.Euler(Vector3.zero), _throwInitialPoint.transform);
-    //        // stone projectile to where clicked -> get mouse pos for direction
-    //    }
-    //}
+    private Vector3 GetMousePos()
+    {
+        var ray = Camera.main.ScreenPointToRay(Mouse.current.position.ReadValue());
+        if (Physics.Raycast(ray, out RaycastHit hit, float.MaxValue))
+        {
+            return hit.point;
+        }
 
-    private void OnDrawGizmosSelected()
+        return Vector3.zero;
+    }
+
+    #endregion
+
+    /*private void OnDrawGizmosSelected()
     {
         Color transparentGreen = new(0.0f, 1.0f, 0.0f, 0.35f);
         Color transparentRed = new(1.0f, 0.0f, 0.0f, 0.35f);
@@ -249,8 +271,11 @@ public class LocomotionController : MonoBehaviour
 
         Gizmos.DrawSphere(new Vector3(transform.position.x, transform.position.y - _groundedOffset, transform.position.z),
             _groundedRadius);
-    }
+    }*/
 
+    #region Animation Events
+
+    // for player walk sound
     private void OnFootstep(AnimationEvent animationEvent)
     {
         if (animationEvent.animatorClipInfo.weight > 0.5f)
@@ -263,6 +288,7 @@ public class LocomotionController : MonoBehaviour
         }
     }
 
+    // for jump land sound
     private void OnLand(AnimationEvent animationEvent)
     {
         if (animationEvent.animatorClipInfo.weight > 0.5f)
@@ -278,4 +304,25 @@ public class LocomotionController : MonoBehaviour
             UIController.instance.PlayerDead();
         }
     }
+
+    #endregion
+
+    #region Collision Methods
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Stone"))
+        {
+            _damageControl_S.StoneHit();
+        }
+
+        if (other.CompareTag("Enemy"))
+        {
+            _damageControl_S.EnemyFinalAttack();
+            _canMove = false;
+            Debug.Log("death started");
+        }
+    }
+
+    #endregion
 }

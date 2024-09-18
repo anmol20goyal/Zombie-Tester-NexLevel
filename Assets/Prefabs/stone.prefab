@@ -16,7 +16,7 @@ GameObject:
   - component: {fileID: 3631316548792236432}
   m_Layer: 0
   m_Name: stone
-  m_TagString: Untagged
+  m_TagString: Stone
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -146,5 +146,5 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e3c283e7bdc2d2846876a60c153bcfad, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _launchVel: 8
+  _launchVel: 12
   _destroyAfterSec: 5

@@ -56,7 +56,21 @@ ModelImporter:
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves: []
-      events: []
+      events:
+      - time: 0.3309495
+        functionName: EnemyDead
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: f119176b7c508e047a09e18b577c1eea, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
+      - time: 0.8601486
+        functionName: EnemyCrawl
+        data: 
+        objectReferenceParameter: {fileID: 11500000, guid: f119176b7c508e047a09e18b577c1eea, type: 3}
+        floatParameter: 0
+        intParameter: 0
+        messageOptions: 0
       transformMask: []
       maskType: 3
       maskSource: {instanceID: 0}
