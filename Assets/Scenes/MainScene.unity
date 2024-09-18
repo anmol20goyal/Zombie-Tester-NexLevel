@@ -13497,8 +13497,8 @@ MonoBehaviour:
   _walkSpeed: 0.5
   _runningSpeed: 5.335
   _jumpMoveSpeed: 1
-  _sightRange: 15
-  _attackRange: 10
+  _sightRange: 12
+  _attackRange: 8
   _jumpAttackRange: 3.5
   _playerInSightRange: 0
   _playerInAttackRange: 0
