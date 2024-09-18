@@ -1237,7 +1237,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!108 &705507994
 Light:
   m_ObjectHideFlags: 0
@@ -1405,37 +1405,6 @@ Transform:
   m_Children: []
   m_Father: {fileID: 3893294199509598463}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1014385529
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1014385530}
-  m_Layer: 7
-  m_Name: GameObject
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &1014385530
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1014385529}
-  serializedVersion: 2
-  m_LocalRotation: {x: -0, y: -0.7071068, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: -4.2, y: 0, z: 2.34}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1017373847
 GameObject:
   m_ObjectHideFlags: 0
@@ -1587,7 +1556,7 @@ MonoBehaviour:
       m_Calls: []
   m_Sprite: {fileID: 21300000, guid: 122ab30fddda8e541a6904b814ebe54b, type: 3}
   m_Type: 0
-  m_PreserveAspect: 1
+  m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -12210,7 +12179,7 @@ Light:
   m_Type: 0
   m_Shape: 0
   m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_Intensity: 0.75
+  m_Intensity: 0.25
   m_Range: 50
   m_SpotAngle: 140
   m_InnerSpotAngle: 1
@@ -13528,8 +13497,8 @@ MonoBehaviour:
   _walkSpeed: 0.5
   _runningSpeed: 5.335
   _jumpMoveSpeed: 1
-  _sightRange: 10
-  _attackRange: 7
+  _sightRange: 15
+  _attackRange: 10
   _jumpAttackRange: 3.5
   _playerInSightRange: 0
   _playerInAttackRange: 0
@@ -13589,7 +13558,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _animator: {fileID: 3947382779217853921}
   _maxHealth: 10
-  _stoneDamage: 10
+  _stoneDamage: 4
   currentHealth: 0
 --- !u!82 &7740587977843916085
 AudioSource:
@@ -14797,7 +14766,7 @@ Light:
   m_Type: 0
   m_Shape: 0
   m_Color: {r: 0.9264706, g: 0.96957403, b: 1, a: 1}
-  m_Intensity: 1.92
+  m_Intensity: 1
   m_Range: 9.111757
   m_SpotAngle: 160.2
   m_InnerSpotAngle: 47.5
@@ -15772,7 +15741,6 @@ SceneRoots:
   m_Roots:
   - {fileID: 2700298420691837901}
   - {fileID: 705507995}
-  - {fileID: 1014385530}
   - {fileID: 3893294199509598463}
   - {fileID: 6928725825898145691}
   - {fileID: 8944336656574773498}
