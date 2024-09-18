@@ -14,15 +14,14 @@ public class Projectile : MonoBehaviour
         _rb = GetComponent<Rigidbody>();
     }
 
-    private void Start()
+    public void Throw(Vector3 targetPos)
     {
-        _mousePos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-        var direc = _mousePos - transform.position;
-        _rb.velocity = -direc.normalized * _launchVel;
+        var direc = targetPos - transform.position;
+        _rb.velocity = direc.normalized * _launchVel;
     }
 
     private void Update()
     {
-        Destroy(gameObject, _destroyAfterSec);
+        Destroy(this.gameObject, _destroyAfterSec);
     }
 }

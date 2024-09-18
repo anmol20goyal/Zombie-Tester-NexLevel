@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.InputSystem;
 
 [RequireComponent(typeof(CharacterController))]
 public class LocomotionController : MonoBehaviour
@@ -57,28 +58,16 @@ public class LocomotionController : MonoBehaviour
 
     #endregion
 
-    #region Animation IDs
-
-    private int _animIDSpeed;
-    private int _animIDGrounded;
-    private int _animIDJump;
-    private int _animIDThrow;
-    private int _animIDDead;
-    private int _animIDFreeFall;
-    private int _animIDMotionSpeed;
-
-    #endregion
-
     #region GameObjects
 
     [Header("*****GameObjects*****")]
     [SerializeField] private GameObject _stone;
     [SerializeField] private GameObject _throwInitialPoint;
+    [SerializeField] private ThrowItem _throwItem_S;
     private Animator _animator;
     private CharacterController _charController;
     private InputsController _inputController;
     private GameObject _mainCamera;
-
 
     #endregion
 
@@ -96,8 +85,6 @@ public class LocomotionController : MonoBehaviour
         _charController = GetComponent<CharacterController>();
         _inputController = GetComponent<InputsController>();
 
-        AssignAnimationIDs();
-
         // reset our timeouts on start
         _fallTimeoutDelta = _fallTimeout;
     }
@@ -107,7 +94,7 @@ public class LocomotionController : MonoBehaviour
         JumpAndGravity();
         GroundedCheck();
         Move();
-        ThrowItem();
+        ThrowStone();
     }
 
     private void LateUpdate()
@@ -115,23 +102,12 @@ public class LocomotionController : MonoBehaviour
         CameraRotation();
     }
 
-    private void AssignAnimationIDs()
-    {
-        _animIDSpeed = Animator.StringToHash("Speed");
-        _animIDGrounded = Animator.StringToHash("Grounded");
-        _animIDJump = Animator.StringToHash("Jump");
-        _animIDThrow = Animator.StringToHash("Throw");
-        //_animIDDead = Animator.StringToHash("Dead");
-        _animIDFreeFall = Animator.StringToHash("FreeFall");
-        _animIDMotionSpeed = Animator.StringToHash("MotionSpeed");
-    }
-
     private void GroundedCheck()
     {
         Vector3 spherePosition = new(transform.position.x, transform.position.y - _groundedOffset, transform.position.z);
         _isGrounded = Physics.CheckSphere(spherePosition, _groundedRadius, _groundLayers, QueryTriggerInteraction.Ignore);
 
-        _animator.SetBool(_animIDGrounded, _isGrounded);
+        _animator.SetBool(AnimationHandler.instance.animIDGrounded, _isGrounded);
     }
 
     private void CameraRotation()
@@ -196,8 +172,8 @@ public class LocomotionController : MonoBehaviour
                          new Vector3(0.0f, _verticalVelocity, 0.0f) * Time.deltaTime);
 
         // update animator
-        _animator.SetFloat(_animIDSpeed, _animationBlend);
-        _animator.SetFloat(_animIDMotionSpeed, inputMagnitude);
+        _animator.SetFloat(AnimationHandler.instance.animIDSpeed, _animationBlend);
+        _animator.SetFloat(AnimationHandler.instance.animIDMotionSpeed, inputMagnitude);
     }
 
     private void JumpAndGravity()
@@ -207,8 +183,8 @@ public class LocomotionController : MonoBehaviour
             _fallTimeoutDelta = _fallTimeout;
 
             // update animator
-            _animator.SetBool(_animIDJump, false);
-            _animator.SetBool(_animIDFreeFall, false);
+            _animator.SetBool(AnimationHandler.instance.animIDJump, false);
+            _animator.SetBool(AnimationHandler.instance.animIDFreeFall, false);
 
             // stop velocity dropping to infinite when grounded
             if (_verticalVelocity < 0.0f) _verticalVelocity = 0f;
@@ -219,7 +195,7 @@ public class LocomotionController : MonoBehaviour
                 _verticalVelocity = Mathf.Sqrt(_jumpHeight * -2f * _gravity);
 
                 // update animator
-                _animator.SetBool(_animIDJump, true);
+                _animator.SetBool(AnimationHandler.instance.animIDJump, true);
             }
         }
         else
@@ -227,7 +203,7 @@ public class LocomotionController : MonoBehaviour
             if (_fallTimeoutDelta >= 0.0f)
                 _fallTimeoutDelta -= Time.deltaTime;
             else
-                _animator.SetBool(_animIDFreeFall, true);
+                _animator.SetBool(AnimationHandler.instance.animIDFreeFall, true);
 
             _inputController.jump = false;
         }
@@ -242,25 +218,26 @@ public class LocomotionController : MonoBehaviour
         return Mathf.Clamp(lfAngle, lfMin, lfMax);
     }
 
-    private void ThrowItem()
+    private void ThrowStone()
     {
         if (_inputController.throwItem)
         {
             _inputController.throwItem = false;
             // update animator
-            _animator.SetTrigger(_animIDThrow);
+            _throwItem_S.StartThrow(_animator, null);
+            //_animator.SetTrigger(AnimationHandler.instance.animIDThrow);
         }
     }
 
-    public void ThrowItemProjectile(AnimationEvent animationEvent)
-    {
-        if (animationEvent.animatorClipInfo.weight > 0.5f)
-        {
-            var stonePos = _throwInitialPoint.transform.position;
-            Instantiate(_stone, stonePos, Quaternion.Euler(Vector3.zero), _throwInitialPoint.transform);
-            // stone projectile to where clicked -> get mouse pos for direction
-        }
-    }
+    //public void ThrowItemProjectile(AnimationEvent animationEvent)
+    //{
+    //    if (animationEvent.animatorClipInfo.weight > 0.5f)
+    //    {
+    //        var stonePos = _throwInitialPoint.transform.position;
+    //        Instantiate(_stone, stonePos, Quaternion.Euler(Vector3.zero), _throwInitialPoint.transform);
+    //        // stone projectile to where clicked -> get mouse pos for direction
+    //    }
+    //}
 
     private void OnDrawGizmosSelected()
     {

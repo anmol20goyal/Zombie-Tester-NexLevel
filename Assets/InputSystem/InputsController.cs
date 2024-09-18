@@ -8,7 +8,6 @@ public class InputsController : MonoBehaviour
 	public bool jump;
 	public bool sprint;
 	public bool throwItem;
-	[SerializeField] private bool _canJump;
 
 	#region Input Functions
 
@@ -24,7 +23,6 @@ public class InputsController : MonoBehaviour
 
 	public void OnJump(InputValue value)
 	{
-		if (!_canJump) return;
 		JumpInput(value.isPressed);
 	}
 
